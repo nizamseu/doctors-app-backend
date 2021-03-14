@@ -21,7 +21,7 @@ const port=5000;
 
 app.get('/',(req,res)=>{
 
-    res.send("hello World")
+    res.send("দাঁত")
 })
 
 
@@ -50,7 +50,6 @@ app.post('/loadappointments',(req,res)=>{
     const date=req.body
     doctorsCollection.find({date:date.selectedDate})
     .toArray((err,document)=>{
-        console.log(document);
         res.send(document)
     })
 })
@@ -68,7 +67,6 @@ app.post('/view',(req,res)=>{
     const id= req.body
     doctorsCollection.find({"_id":ObjectID(id.id)})
     .toArray((err,document)=>{
-        console.log(document);
         res.send(document)
     })
 })
@@ -76,10 +74,8 @@ app.post('/view',(req,res)=>{
 
 app.post('/today',(req,res)=>{
     const date=req.body
-    console.log("s",date);
     doctorsCollection.find({date:date.date})
     .toArray((err,document)=>{
-        console.log(document);
         res.send(document)
     })
 })
@@ -88,7 +84,6 @@ app.get('/recent',(req,res)=>{
     const recent=req.body;
     doctorsCollection.find({}).sort({_id:-1}).limit(5)
     .toArray((err,document)=>{
-        console.log("Re",document);
         res.send(document)
     })
 })
@@ -116,7 +111,6 @@ app.patch('/visited',(req,res)=>{
         $set:{isVisited:isvisited}
     })
     .then(result=>{
-        console.log(result);
         res.send(result.modifiedCount>0)
     })
     })
