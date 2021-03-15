@@ -1,6 +1,8 @@
 const express =require('express');
 const bodyParser =require('body-parser');
 const cors =require('cors');
+const fileUpload = require('express-fileupload');
+const fs=require('fs-extra')
 const MongoClient = require('mongodb').MongoClient;
 const { ObjectID } = require('mongodb');
 const uri = "mongodb+srv://doctors:doctors@cluster0.r2lzi.mongodb.net/doctors-app?retryWrites=true&w=majority";
@@ -15,6 +17,8 @@ const app =express();
 
 app.use(bodyParser.json());
 app.use(cors());
+app.use(express.static('doctors'));
+app.use(fileUpload());
 
 const port=5000;
 
@@ -29,7 +33,7 @@ app.get('/',(req,res)=>{
 
  client.connect(err => {
   const doctorsCollection = client.db("doctors-app").collection("booking");
-
+  const AllDoctors = client.db("doctors-app").collection("doctors");
  app.post('/addApoinment',(req,res)=>{
     const apointment =req.body;
     doctorsCollection.insertOne(apointment)
@@ -113,8 +117,45 @@ app.patch('/visited',(req,res)=>{
     .then(result=>{
         res.send(result.modifiedCount>0)
     })
-    })
+})
 
+
+app.post('/adddoctor',(req,res)=>{
+    const file=req.files.file;
+    const name=req.body.name;
+    const email= req.body.email;
+    const filePath=`${__dirname}/doctors/${file.name}`
+    file.mv(filePath,err=>{
+        if(err){
+            res.status(500).send({msg:'Fail to upload server'})
+        }
+        const newImage=fs.readFileSync(filePath);
+        const encImg=newImage.toString('base64');
+
+        const image={
+            contentType:req.files.file.mimetype,
+            size:req.files.file.size,
+            img:Buffer(encImg,'base64')
+        }
+        AllDoctors.insertOne({name,email,image})
+        .then(result=>{
+            fs.remove(filePath,err=>{
+                if(err){
+                    console.log(err);
+                }
+            })
+            res.send(result.insertedCount>0)
+        })
+        // res.send({name:file.name,path:`/${file.name}`})
+    })
+})
+
+app.get('/doctors',(req,res)=>{
+    AllDoctors.find({})
+    .toArray((err,document)=>{
+        res.send(document)
+    })
+})
   console.log("Connection paiche");
  
 });
