@@ -124,30 +124,19 @@ app.post('/adddoctor',(req,res)=>{
     const file=req.files.file;
     const name=req.body.name;
     const email= req.body.email;
-    const filePath=`${__dirname}/doctors/${file.name}`
-    file.mv(filePath,err=>{
-        if(err){
-            res.status(500).send({msg:'Fail to upload server'})
-        }
-        const newImage=fs.readFileSync(filePath);
+        const newImage=file.data;
         const encImg=newImage.toString('base64');
 
         const image={
-            contentType:req.files.file.mimetype,
-            size:req.files.file.size,
-            img:Buffer(encImg,'base64')
+            contentType:file.mimetype,
+            size:file.size,
+            img:Buffer.from(encImg,'base64')
         }
         AllDoctors.insertOne({name,email,image})
         .then(result=>{
-            fs.remove(filePath,err=>{
-                if(err){
-                    console.log(err);
-                }
-            })
             res.send(result.insertedCount>0)
         })
-        // res.send({name:file.name,path:`/${file.name}`})
-    })
+      
 })
 
 app.get('/doctors',(req,res)=>{
